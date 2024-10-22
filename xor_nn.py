@@ -1,4 +1,3 @@
-# xor_nn.py
 import numpy as np
 
 # Sigmoid aktivasyon fonksiyonu
@@ -30,6 +29,15 @@ class XOR_NN:
         self.bias_hidden = np.random.uniform(size=(1, self.hidden_neurons))
         # çıkış katmanı bias değeri
         self.bias_output = np.random.uniform(size=(1, self.output_neurons))
+
+        # Ağırlık ve bias'ları, kayıp fonksiyonunu her epoch için kaydetmek üzere listeler tanımlanır
+        self.epoch_losses = []
+        self.epoch_weights_input_hidden = []
+        self.epoch_weights_hidden_output = []
+        self.epoch_bias_hidden = []
+        self.epoch_bias_output = []
+        self.epoch_delta_output_layer = []
+        self.epoch_delta_hidden_layer = []
 
     # İleri besleme fonksiyonu.
     # Burada amaç fonksiyona gelen X değerinin gizli ve çıktı katmanlarındaki ağıırlık ve bias değerleri ile matematiksel işlemlere tabi tutarak bir çıktı
@@ -64,6 +72,10 @@ class XOR_NN:
         self.bias_output += np.sum(delta_output_layer, axis=0, keepdims=True) * learning_rate
         self.bias_hidden += np.sum(delta_hidden_layer, axis=0, keepdims=True) * learning_rate
 
+        # Delta değerleri kaydedilir
+        self.epoch_delta_output_layer.append(delta_output_layer)
+        self.epoch_delta_hidden_layer.append(delta_hidden_layer)
+
 
     # Eğitim veri seti ile ysa modelinin eğitimini yapan fonksiyon.
     # iterations parametresi eğitim veri setinin kaç kez kullanılarak modelin ağırlık ve bias değerlerini güncelleyeceğini belirtir. Burada default olarak
@@ -80,6 +92,16 @@ class XOR_NN:
             self.forwardFeeding(X)
             self.backwardFeeding(X, y, learningRate)
 
+            # Her epoch sonunda loss kaydedilir
+            loss = np.mean(np.square(y - self.output_layer_output))
+            self.epoch_losses.append(loss)
+
+            # Her epoch sonunda ağırlık ve bias değerleri kaydedilir
+            self.epoch_weights_input_hidden.append(self.weights_input_hidden.copy())
+            self.epoch_weights_hidden_output.append(self.weights_hidden_output.copy())
+            self.epoch_bias_hidden.append(self.bias_hidden.copy())
+            self.epoch_bias_output.append(self.bias_output.copy())
+
             # Her 1000 iterasyonda 1 kaybı yazdır
             if iteration % 1000 == 0:
                 loss = np.mean(np.square(y - self.output_layer_output))
@@ -91,4 +113,3 @@ class XOR_NN:
     # hesaplanır.
     def predict(self, X):
         return self.forwardFeeding(X)
-
