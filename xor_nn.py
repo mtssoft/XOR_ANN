@@ -3,11 +3,19 @@ import numpy as np
 # Sigmoid aktivasyon fonksiyonu
 # Gizli katman ve çıktı katmanının çıktılarını üreten fonksiyondur.
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    result = 1 / (1 + np.exp(-x))
+    print("\nSigmoid fonksiyonu: f(x) = 1 / (1 + exp(-x))")
+    print(f"Sigmoid giriş: {x}")
+    print(f"Sigmoid çıkış: {result}")
+    return result
 
 # Sigmoid aktivasyon fonksiyonunun türevi
 def sigmoidDerivative(x):
-    return x * (1 - x)
+    result = x * (1 - x)
+    print("\nSigmoid Türev fonksiyonu: f'(x) = x * (1 - x)")
+    print(f"Sigmoid Türev giriş: {x}")
+    print(f"Sigmoid Türev çıkış: {result}")
+    return result
 
 # Sinir ağı sınıfı
 class XOR_NN:
@@ -43,12 +51,22 @@ class XOR_NN:
     # Burada amaç fonksiyona gelen X değerinin gizli ve çıktı katmanlarındaki ağıırlık ve bias değerleri ile matematiksel işlemlere tabi tutarak bir çıktı
     # üretmesini sağlamaktır.
     def forwardFeeding(self, X):
-
+        print("\n\n--- İleri Besleme (Forward Feeding) ---")
+        print("Gizli katman girdi hesaplaması: Z_h = X * W_ih + b_h")
         self.hidden_layer_input = np.dot(X, self.weights_input_hidden) + self.bias_hidden
-        self.hidden_layer_output = sigmoid(self.hidden_layer_input)
+        print(f"Gizli Katman Girdi: {self.hidden_layer_input}")
 
+        print("Sigmoid aktivasyon (gizli katman): H = sigmoid(Z_h)")
+        self.hidden_layer_output = sigmoid(self.hidden_layer_input)
+        print(f"Gizli Katman Çıktı (Aktivasyon Sonrası): {self.hidden_layer_output}")
+
+        print("Çıkış katmanı girdi hesaplaması: Z_o = H * W_ho + b_o")
         self.output_layer_input = np.dot(self.hidden_layer_output, self.weights_hidden_output) + self.bias_output
+        print(f"Çıkış Katmanı Girdi: {self.output_layer_input}")
+
+        print("Sigmoid aktivasyon (çıkış katmanı): Y = sigmoid(Z_o)")
         self.output_layer_output = sigmoid(self.output_layer_input)
+        print(f"Çıkış Katmanı Çıktı (Aktivasyon Sonrası): {self.output_layer_output}")
 
         return self.output_layer_output
 
@@ -60,17 +78,40 @@ class XOR_NN:
     # Beklenen çıktı ile alınan çıktı arasındaki farkı 0'a yaklaştıracak şekilde ağırlık vektörlerini ve bias'i günceller.
     # Modelimizin öğrenme aşaması burada gerçekleşir diyebiliriz.
     def backwardFeeding(self, X, y, learning_rate=0.1):
+        print("\n\n--- Geri Besleme (Backward Feeding) ---")
 
+        print("Çıkış katmanı hatası: E_o = y - Y")
         error_output_layer = y - self.output_layer_output
+        print(f"Çıkış Katmanı Hata: {error_output_layer}")
+
+        print("Çıkış katmanı delta değeri: Δ_o = E_o * sigmoid'(Y)")
         delta_output_layer = error_output_layer * sigmoidDerivative(self.output_layer_output)
+        print(f"Çıkış Katmanı Delta: {delta_output_layer}")
 
+        print("Gizli katman hatası: E_h = Δ_o * W_ho^T")
         error_hidden_layer = delta_output_layer.dot(self.weights_hidden_output.T)
-        delta_hidden_layer = error_hidden_layer * sigmoidDerivative(self.hidden_layer_output)
+        print(f"Gizli Katman Hata: {error_hidden_layer}")
 
+        print("Gizli katman delta değeri: Δ_h = E_h * sigmoid'(H)")
+        delta_hidden_layer = error_hidden_layer * sigmoidDerivative(self.hidden_layer_output)
+        print(f"Gizli Katman Delta: {delta_hidden_layer}")
+
+        print("\nAğırlık ve bias güncellemeleri:")
+        print("W_ho = W_ho + H^T * Δ_o * öğrenme hızı")
         self.weights_hidden_output += self.hidden_layer_output.T.dot(delta_output_layer) * learning_rate
+        print(f"Güncellenmiş Gizli-Çıkış Ağırlıkları: {self.weights_hidden_output}")
+
+        print("W_ih = W_ih + X^T * Δ_h * öğrenme hızı")
         self.weights_input_hidden += X.T.dot(delta_hidden_layer) * learning_rate
+        print(f"Güncellenmiş Girdi-Gizli Ağırlıkları: {self.weights_input_hidden}")
+
+        print("b_o = b_o + Σ(Δ_o) * öğrenme hızı")
         self.bias_output += np.sum(delta_output_layer, axis=0, keepdims=True) * learning_rate
+        print(f"Güncellenmiş Çıkış Bias: {self.bias_output}")
+
+        print("b_h = b_h + Σ(Δ_h) * öğrenme hızı")
         self.bias_hidden += np.sum(delta_hidden_layer, axis=0, keepdims=True) * learning_rate
+        print(f"Güncellenmiş Gizli Bias: {self.bias_hidden}")
 
         # Delta değerleri kaydedilir
         self.epoch_delta_output_layer.append(delta_output_layer)
